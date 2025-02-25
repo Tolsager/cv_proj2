@@ -50,13 +50,20 @@ def train(device='cpu', T=500, img_size=16, input_channels=3, channels=32, time_
         for images, labels in train_loader:
             images = images.to(device)
             labels = labels.to(device)
+            optimizer.zero_grad()
+            ts = diffusion.sample_timesteps(images.shape[0]).to(device)
+            xts, noise = diffusion.q_sample(images, ts)
+            preds = model(xts, ts)
+            loss = loss_fn(preds, labels)
+            loss.backward()
+            optimizer.step()
+
 
             # Do not forget to noise your images !
 
-            ...
     
     # save your checkpoint in weights/classifier/model.pth
-    torch.save(model.state_dict(), os.path.join("weights", exp_name, 'model.pth'))
+    torch.save(model.state_dict(), os.path.join("exercise2/weights", exp_name, 'model.pth'))
 
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  
