@@ -72,7 +72,7 @@ def train(device='cpu', T=500, img_size=16, input_channels=3, channels=32, time_
     mse = torch.nn.MSELoss() # use MSE loss 
     
     logger = SummaryWriter(os.path.join("runs", experiment_name))
-    l = len(dataloader)
+    L = len(dataloader)
 
     for epoch in range(1, num_epochs + 1):
         logging.info(f"Starting epoch {epoch}:")
@@ -94,7 +94,7 @@ def train(device='cpu', T=500, img_size=16, input_channels=3, channels=32, time_
 
 
             pbar.set_postfix(MSE=loss.item())
-            logger.add_scalar("MSE", loss.item(), global_step=epoch * l + i)
+            logger.add_scalar("MSE", loss.item(), global_step=epoch * L + i)
 
         sampled_images = diffusion.p_sample_loop(model, batch_size=images.shape[0])
         save_images(images=sampled_images, path=os.path.join("results", experiment_name, f"{epoch}.jpg"),
