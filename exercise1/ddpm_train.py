@@ -1,7 +1,9 @@
+from ddpm import Diffusion
+from model import UNet
+
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from PIL import Image
 import random
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -12,8 +14,6 @@ import logging
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%I:%M:%S")
 
-from ddpm import Diffusion
-from model import UNet
 
 SEED = 1
 DATASET_SIZE = 40000

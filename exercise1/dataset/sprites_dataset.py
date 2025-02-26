@@ -1,6 +1,5 @@
 import numpy as np
 import random
-import torch
 from torch.utils.data import Dataset
 from torchvision import transforms 
 from .helpers import set_seed
