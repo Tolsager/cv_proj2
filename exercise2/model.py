@@ -140,8 +140,10 @@ class UNet(nn.Module):
         if num_classes is not None:
             # Project one-hot encoded labels to the time embedding dimension 
             # Implement it as a 2-layer MLP with a GELU activation in-between
-            # self.label_emb = ...
-            pass
+            self.label_emb = nn.Sequential(
+                nn.Linear(num_classes, time_dim),
+                nn.GELU(),
+                nn.Linear(time_dim, time_dim))
             
 
     def forward(self, x, t, y=None):
@@ -151,7 +153,8 @@ class UNet(nn.Module):
 
         if y is not None:
             # Add label and time embeddings together
-            pass
+            y = self.label_emb(y)
+            t = t + y
             
         x1 = self.inc(x)
         x2 = self.down1(x1, t)
