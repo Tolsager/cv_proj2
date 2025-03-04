@@ -70,12 +70,12 @@ if __name__ == '__main__':
     )
     classifier.to(device)
     classifier.eval()
-    classifier.load_state_dict(torch.load('weights/classifier/model.pth', map_location=device))
+    classifier.load_state_dict(torch.load('exercise2/weights/classifier/model.pth', map_location=device))
 
     unet_ddpm = UNet(device=device)
     unet_ddpm.eval()
     unet_ddpm.to(device)
-    unet_ddpm.load_state_dict(torch.load('weights/DDPM/model.pth', map_location=device))
+    unet_ddpm.load_state_dict(torch.load('exercise2/weights/DDPM/model.pth', map_location=device))
     ddpm_cg.classifier = classifier
 
     ######################################### classifier-free guidance #########################################
@@ -83,12 +83,12 @@ if __name__ == '__main__':
     unet_ddpm_cFg = UNet(num_classes=5, device=device)
     unet_ddpm_cFg.eval()
     unet_ddpm_cFg.to(device)
-    unet_ddpm_cFg.load_state_dict(torch.load('weights/DDPM-cfg/model.pth', map_location=device))
+    unet_ddpm_cFg.load_state_dict(torch.load('exercise2/weights/DDPM-cfg/model.pth', map_location=device))
 
     model = VGG()
     model.to(device)
     model.eval()
-    model.load_state_dict(torch.load('weights/vgg-sprites/model.pth', map_location=device))
+    model.load_state_dict(torch.load('exercise2/weights/vgg-sprites/model.pth', map_location=device))
     dims = 256 # vgg feature dim
 
     _ ,_, test_loader = prepare_dataloaders(val_batch_size=100)
