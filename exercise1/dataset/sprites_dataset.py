@@ -1,6 +1,9 @@
 import numpy as np
 import random
+<<<<<<< HEAD
 import torch
+=======
+>>>>>>> 7a1d79814df4e5dcf930aa4e7c51ab4be33cdc4d
 from torch.utils.data import Dataset
 from torchvision import transforms 
 from .helpers import set_seed
