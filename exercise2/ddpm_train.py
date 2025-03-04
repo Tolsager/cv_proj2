@@ -84,7 +84,7 @@ def train(T=500, cfg=True, img_size=16, input_channels=3, channels=32,
             # Do not forget randomly discard labels
             p_uncod = 0.1
             mask = torch.rand(labels.shape[0])
-            labels[mask < p_uncod] = None
+            labels[mask < p_uncod] = 0
             t = diffusion.sample_timesteps(labels.shape[0])
             x_t, noise = diffusion.q_sample(images, t)
             predicted_noise = diffusion.p_sample(model, x_t, t, labels) 
