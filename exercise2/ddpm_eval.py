@@ -2,6 +2,7 @@ import os
 import matplotlib.pyplot as plt
 from scipy import linalg
 from tqdm import tqdm
+import numpy as np
 
 # torch
 import torch
@@ -53,7 +54,7 @@ def frechet_distance(mu1, sigma1, mu2, sigma2):
     # HINT: https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.sqrtm.html
     # Implement FID score
 
-    fid = ...
+    fid = np.linalg.norm(mu1 - mu2)**2 + np.linalg.trace(sigma1 + sigma2 - 2*linalg.sqrtm(sigma1*sigma2))
 
     return fid
 
