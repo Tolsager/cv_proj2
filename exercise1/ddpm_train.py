@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from PIL import Image
 import random
 import torch
 from torch.utils.tensorboard import SummaryWriter
