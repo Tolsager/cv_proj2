@@ -19,12 +19,12 @@ ddpm_cFg = Diffusion(img_size=16, T=500, beta_start=1e-4, beta_end=0.02, diff_ty
 unet_ddpm_cFg = UNet(num_classes=5, device=device)
 unet_ddpm_cFg.eval()
 unet_ddpm_cFg.to(device)
-unet_ddpm_cFg.load_state_dict(torch.load('weights/DDPM-cfg/model.pth', map_location=device))
+unet_ddpm_cFg.load_state_dict(torch.load('exercise2/weights/DDPM-cfg/model.pth', map_location=device))
 
 # Sample
 y = torch.tensor([0,1,2,3,4], device=device) 
 y = F.one_hot(y, num_classes=5).float()
 x_new = ddpm_cFg.p_sample_loop(unet_ddpm_cFg, 5, y=y)
 imgs = [im_normalize(tens2image(x_gen.cpu())) for x_gen in x_new]
-show(imgs, fig_titles=CLASS_LABELS, title='classifier FREE guidance', save_path='assets/cFg_samples.png')
+show(imgs, fig_titles=CLASS_LABELS, title='classifier FREE guidance', save_path='exercise2/assets/cFg_samples.png')
 

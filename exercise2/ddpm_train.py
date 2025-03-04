@@ -38,10 +38,10 @@ def save_images(images, path, show=True, title=None, nrow=10):
 
 
 def create_result_folders(experiment_name):
-    os.makedirs("weights", exist_ok=True)
-    os.makedirs("results", exist_ok=True)
-    os.makedirs(os.path.join("weights", experiment_name), exist_ok=True)
-    os.makedirs(os.path.join("results", experiment_name), exist_ok=True)
+    os.makedirs("exercise2/weights", exist_ok=True)
+    os.makedirs("exercise2/results", exist_ok=True)
+    os.makedirs(os.path.join("exercise2/weights", experiment_name), exist_ok=True)
+    os.makedirs(os.path.join("exercise2/results", experiment_name), exist_ok=True)
 
 
 def train(T=500, cfg=True, img_size=16, input_channels=3, channels=32, 
@@ -102,7 +102,7 @@ def train(T=500, cfg=True, img_size=16, input_channels=3, channels=32,
 
         epoch_loss /= l
         if epoch_loss <= min_train_loss:
-            torch.save(model.state_dict(), os.path.join("weights", experiment_name, f"model.pth"))
+            torch.save(model.state_dict(), os.path.join("exercise2/weights", experiment_name, f"model.pth"))
             min_train_loss = epoch_loss
 
             
@@ -115,7 +115,7 @@ def train(T=500, cfg=True, img_size=16, input_channels=3, channels=32,
             title = f'Epoch {epoch}'
 
         sampled_images = diffusion.p_sample_loop(model, batch_size=images.shape[0], y=y)
-        save_images(images=sampled_images, path=os.path.join("results", experiment_name, f"{epoch}.jpg"),
+        save_images(images=sampled_images, path=os.path.join("exercise2/results", experiment_name, f"{epoch}.jpg"),
                     show=show, title=title)
         
 
