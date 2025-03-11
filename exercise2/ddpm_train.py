@@ -75,19 +75,21 @@ def train(T=500, cfg=True, img_size=16, input_channels=3, channels=32,
 
             if diff_type == 'DDPM-cFg':
                 # one-hot encode labels for classifier-free guidance
-                labels = labels.to(device)
-                labels = F.one_hot(labels, num_classes=num_classes).float()
-            else :
+                if np.random.rand() < 0.1:
+                    labels = None
+                else:
+                    labels = labels.to(device)
+                    labels = F.one_hot(labels, num_classes=num_classes).float()
+            else:
                 labels = None
 
             # Train a diffusion model with classifier-free guidance
             # Do not forget randomly discard labels
-            p_uncod = 0.1
-            mask = torch.rand(labels.shape[0])
-            labels[mask < p_uncod] = 0
-            t = diffusion.sample_timesteps(labels.shape[0])
+                
+            
+            t = diffusion.sample_timesteps(images.shape[0])
             x_t, noise = diffusion.q_sample(images, t)
-            predicted_noise = diffusion.p_sample(model, x_t, t, labels) 
+            predicted_noise = model(x_t, t, labels) 
             loss = mse(predicted_noise, noise)
 
             optimizer.zero_grad()
