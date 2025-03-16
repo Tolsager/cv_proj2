@@ -53,7 +53,7 @@ CONFIG = {
     "gradient_checkpointing": True,
     "mixed_precision": "fp16",
     "seed": 42,
-    "concept_folder": "buzz", # TODO: Change this to your concept folder,  sec 1.1 Concept Preparation
+    "concept_folder": "concept_images", # TODO: Change this to your concept folder,  sec 1.1 Concept Preparation
 }
 # Automatically set output_dir based on concept_folder
 CONFIG["output_dir"] = "output_" + CONFIG["concept_folder"].rstrip("/") + "/"
@@ -220,19 +220,44 @@ def training_function(text_encoder, vae, unet, tokenizer, placeholder_token_id):
     progress_bar.set_description("Steps")
     global_step = 0
 
-   ### TODO: Implement the training loop here for Section 1.2 Embedding Training
-   ### 
-   ### You need to:
-   ### 1. Loop through epochs and batches
-   ### 2. Process images through VAE to get latents
-   ### 3. Add noise to latents using the noise scheduler
-   ### 4. Get text embeddings from the text encoder
-   ### 5. Predict noise with UNet and calculate loss
-   ### 6. Update only the embeddings for the placeholder token
-   ### 7. Save checkpoints at specified intervals
-   ###
-   ### Refer to the main.py file for implementation details
-   # ...
+    ### 1. Loop through epochs and batches +
+    ### 2. Process images through VAE to get latents +
+    ### 3. Add noise to latents using the noise scheduler +
+    ### 4. Get text embeddings from the text encoder +
+    ### 5. Predict noise with UNet and calculate loss +
+    ### 6. Update only the embeddings for the placeholder token -
+    ### 7. Save checkpoints at specified intervals +
+
+    criterion = torch.nn.MSELoss()
+    for epoch in range(num_train_epochs):
+        for sample in train_dataloader:
+            input_ids = sample["input_ids"].to(accelerator.device, dtype=weight_dtype)
+            images = sample["pixel_values"].to(accelerator.device, dtype=weight_dtype)
+
+            latent = vae(images).sample
+            noise = torch.randn_like(latent).to(accelerator.device, dtype=weight_dtype)
+            timestep = torch.randint(1, 500, (1,)).to(accelerator.device, dtype=weight_dtype)
+            noisy_latent = noise_scheduler.add_noise(latent, noise, timestep)
+
+            text_embeddings = text_encoder(input_ids=input_ids)
+
+            predicted_noise = unet(noisy_latent, timestep, text_embeddings).sample
+
+            optimizer.zero_grad()
+
+            loss = criterion(predicted_noise, noise)
+            loss.backward()
+
+            optimizer.step()
+
+            progress_bar.update(1)
+            global_step += 1
+
+            if (global_step + 1) % 100 == 0:
+                save_progress(text_encoder, placeholder_token_id, accelerator, ".")
+
+        
+            
    #########################################################
     
     logger.info(f"Training completed. Peak GPU memory usage: {peak_memory:.2f}GB")
