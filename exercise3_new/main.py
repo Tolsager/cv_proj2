@@ -43,7 +43,7 @@ CONFIG = {
     "pretrained_model": "stabilityai/stable-diffusion-2",
     "what_to_teach": "object",  # Choose between "object" or "style"
     "placeholder_token": "<my-concept>",  # The token you'll use to trigger your concept
-    "initializer_token": "toy",  # A word that describes your concept
+    "initializer_token": "chair",  # A word that describes your concept
     "learning_rate": 5e-04,
     "scale_lr": True,  
     "max_train_steps": 500,  # should be 2000
@@ -231,22 +231,24 @@ def training_function(text_encoder, vae, unet, tokenizer, placeholder_token_id):
     criterion = torch.nn.MSELoss()
     for epoch in range(num_train_epochs):
         for sample in train_dataloader:
-            input_ids = sample["input_ids"].to(accelerator.device, dtype=weight_dtype)
+            input_ids = sample["input_ids"].to(accelerator.device, dtype=torch.int)
             images = sample["pixel_values"].to(accelerator.device, dtype=weight_dtype)
 
-            latent = vae(images).sample
+            latent = vae.encode(images).latent_dist.sample()
+            latent = latent * vae.config.scaling_factor
             noise = torch.randn_like(latent).to(accelerator.device, dtype=weight_dtype)
-            timestep = torch.randint(1, 500, (1,)).to(accelerator.device, dtype=weight_dtype)
+            timestep = torch.randint(1, 500, (images.shape[0],)).to(accelerator.device, dtype=torch.long)
             noisy_latent = noise_scheduler.add_noise(latent, noise, timestep)
 
-            text_embeddings = text_encoder(input_ids=input_ids)
-
-            predicted_noise = unet(noisy_latent, timestep, text_embeddings).sample
+            text_embeddings = text_encoder(input_ids=input_ids).last_hidden_state
+ 
+            with accelerator.autocast():
+                predicted_noise = unet(noisy_latent, timestep, text_embeddings).sample
+                loss = criterion(predicted_noise, noise)
 
             optimizer.zero_grad()
 
-            loss = criterion(predicted_noise, noise)
-            loss.backward()
+            accelerator.backward(loss)
 
             optimizer.step()
 
@@ -254,7 +256,7 @@ def training_function(text_encoder, vae, unet, tokenizer, placeholder_token_id):
             global_step += 1
 
             if (global_step + 1) % 100 == 0:
-                save_progress(text_encoder, placeholder_token_id, accelerator, ".")
+                save_progress(text_encoder, placeholder_token_id, accelerator, f"embeds_{global_step}.pth")
 
         
             
@@ -354,7 +356,41 @@ def main():
     # - guidance_scale: Values between 7-9 typically work well
     # - Try different prompts to see how your concept generalizes
     #
+    #vae = AutoencoderKL.from_pretrained("concept_images_output/vae")
+    #unet = UNet2DConditionModel.from_pretrained("concept_images_output/unet")
+    #text_encoder = CLIPTextModel.from_pretrained("concept_images_output/text_encoder")
+    #tokenizer = CLIPTokenizer.from_pretrained("concept_images_output/tokenizer")
+
+
+    #pipeline = StableDiffusionPipeline.from_pretrained(
+    #        CONFIG["pretrained_model"],
+    #        vae=vae,
+    #        unet=unet,
+    #        text_encoder=text_encoder,
+    #        tokenizer=tokenizer
+    #        )
+
+    accelerator = Accelerator(
+            gradient_accumulation_steps=1,
+            mixed_precision=CONFIG["mixed_precision"]
+            )
+
+    with accelerator.autocast():
+        dpm_scheduler = DPMSolverMultistepScheduler.from_pretrained(CONFIG["pretrained_model"], subfolder="scheduler")
+        dpm_scheduler.set_timesteps(num_inference_steps=35)
+
+        pipeline.scheduler = dpm_scheduler
+
+        prompt = "A <my-concept> on sand dunes"
+
+        image = pipeline(prompt, guidance_scale=15).images[0]
+
+        image.save("textual_inversion_test.png")
+
+
     # IMPORTANT: Make sure your GPU has enough memory before running this section!
+        
+    
 
 
 if __name__ == "__main__":
